@@ -3,6 +3,9 @@
 
 A simple Go app for processing SIRDSs
 
+![Go Lint](https://github.com/aarich/heroku-go/workflows/Go%20Lint/badge.svg)
+![Go Build / Test](https://github.com/aarich/heroku-go/workflows/Go%20Build%20/%20Test/badge.svg)
+
 ## Thanks
 
  - [eddycjy/go-gin-example](https://github.com/eddycjy/go-gin-example)
