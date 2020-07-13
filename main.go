@@ -1,55 +1,21 @@
 package main
 
 import (
-	"bytes"
-	"log"
-	"net/http"
-	"os"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
 	_ "github.com/heroku/x/hmetrics/onload"
-	"github.com/russross/blackfriday"
+
+	"github.com/aarich/heroku-go/pkg/settings"
+	"github.com/aarich/heroku-go/pkg/util"
+	"github.com/aarich/heroku-go/routers"
 )
 
-func repeatHandler(r int) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var buffer bytes.Buffer
-		for i := 0; i < r; i++ {
-			buffer.WriteString("Hello from Go (My Git)!\n")
-		}
-		c.String(http.StatusOK, buffer.String())
-	}
+func init() {
+	settings.Setup()
 }
 
 func main() {
-	port := os.Getenv("PORT")
 
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
+	router := routers.InitRouter()
 
-	tStr := os.Getenv("REPEAT")
-	repeat, err := strconv.Atoi(tStr)
-	if err != nil {
-		log.Printf("Error Converting $REPEAT to an int: %q - Using default\n", err)
-		repeat = 5
-	}
-
-	router := gin.New()
-	router.Use(gin.Logger())
-	router.LoadHTMLGlob("templates/*.tmpl.html")
-	router.Static("/static", "static")
-
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.tmpl.html", nil)
-	})
-
-	router.GET("/mark", func(c *gin.Context) {
-		c.String(http.StatusOK, string(blackfriday.Run([]byte("**hi!**"))))
-	})
-
-	router.GET("/repeat", repeatHandler(repeat))
-
+	port := util.GetEnv("PORT")
 	router.Run(":" + port)
 }
