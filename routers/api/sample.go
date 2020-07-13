@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"image"
 	"image/png"
+	"log"
 	"net/http"
 
 	"github.com/aarich/heroku-go/pkg/app"
@@ -19,10 +20,13 @@ func Sample(c *gin.Context) {
 	z := images.MakeDistanceMap(size, images.Square)
 	result := stereogram.Generate(z)
 
-	a := app.GinApp{c}
+	a := app.GinApp{Context: c}
 
 	s := &bytes.Buffer{}
-	png.Encode(s, result)
+	err := png.Encode(s, result)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	str := base64.StdEncoding.EncodeToString(s.Bytes())
 
 	a.Respond(http.StatusOK, errors.SUCCESS, map[string]string{

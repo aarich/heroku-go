@@ -18,7 +18,7 @@ import (
 )
 
 func Generate(c *gin.Context) {
-	a := app.GinApp{c}
+	a := app.GinApp{Context: c}
 
 	file, image, err := c.Request.FormFile("image")
 
@@ -111,7 +111,7 @@ func checkImage(src string) error {
 	}
 
 	perm := file.CheckPermission(src)
-	if perm == true {
+	if perm {
 		return fmt.Errorf("file.CheckPermission Permission denied src: %s", src)
 	}
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	_ "github.com/heroku/x/hmetrics/onload"
 
 	"github.com/aarich/heroku-go/pkg/settings"
@@ -17,5 +19,9 @@ func main() {
 	router := routers.InitRouter()
 
 	port := util.GetEnv("PORT")
-	router.Run(":" + port)
+	err := router.Run(":" + port)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
