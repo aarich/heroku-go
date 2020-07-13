@@ -1,12 +1,11 @@
 {
-  "name": "Start on Heroku: Go",
-  "description": "Go Getting Started Example App",
+  "name": "Stereogram server in go",
+  "description": "Stereogram server in go",
   "keywords": [
-    "getting-started",
     "go",
-    "sample",
-    "example"
+    "stereogram",
+    "sirds"
   ],
-  "website": "http://github.com/heroku/go-getting-started",
-  "repository": "http://github.com/heroku/go-getting-started"
+  "website": "http://github.com/aarich/heroku-go",
+  "repository": "http://github.com/aarich/heroku-go"
 }
