@@ -3,6 +3,7 @@ package stereogram
 import (
 	"image"
 	"image/color"
+	"log"
 	"math"
 	"math/rand"
 )
@@ -12,29 +13,28 @@ const (
 	EYE_SEPARATION = 200 // pixels
 )
 
-func Generate(z [][]float32) *image.Gray {
+func Generate(z [][]float32) *image.RGBA {
 	height := len(z)
 	width := len(z[0])
 
-	out := image.NewGray(image.Rect(0, 0, width, height))
+	out := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	for y := 0; y < height; y++ {
 		constraintsFound := ""
 		constraints := makeConstraints(y, z)
 
 		for x := 0; x < width; x++ {
-			var val color.Gray
+			var val color.Color
 			if constraints[x] == x {
 				// There is no constraint. Use a random number
 
-				val = color.Gray{randomDot()}
-				constraintsFound += "X"
+				val = randomDot()
 			} else {
 				// We will have already written the previous value, so use that
-				val = out.GrayAt(constraints[x], y)
+				val = out.At(constraints[x], y)
 				constraintsFound += "."
 			}
-			out.SetGray(x, y, val)
+			out.Set(x, y, val)
 		}
 
 		// log.Printf("constraints: %s", constraintsFound)
@@ -77,11 +77,25 @@ func separation(z float32) int {
 	return int(math.Round(float64(sep)))
 }
 
-func randomDot() uint8 {
-	return uint8(rand.Intn(255))
-	/*	if rand.Intn(2) < 1 {
-			return 0
-		} else {
-			return 245
-		}*/
+func randomDot() color.Color {
+	// For now just return white/black
+	value := rand.Intn(2)
+
+	alpha := uint8(255)
+	switch value {
+	case 0:
+		return color.RGBA{0, 0, 0, alpha}
+	case 1:
+		return color.RGBA{255, 255, 255, alpha}
+	case 2:
+		return color.RGBA{122, 122, 122, alpha}
+	case 3:
+		return color.RGBA{0, 255, 255, alpha}
+	case 4:
+		return color.RGBA{255, 255, 0, alpha}
+	case 5:
+		return color.RGBA{255, 0, 255, alpha}
+	}
+	log.Fatalf("Got unexpected random number %d", value)
+	return nil
 }

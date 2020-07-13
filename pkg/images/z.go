@@ -30,7 +30,6 @@ func makeSquare(bounds image.Rectangle) [][]float32 {
 		for y := 0; y < h; y++ {
 			if inbounds(x, w) && inbounds(y, h) {
 				col[y] = 0.9
-				log.Println("INBOUND")
 			} else {
 				col[y] = 0
 			}
@@ -45,7 +44,6 @@ func makeSquare(bounds image.Rectangle) [][]float32 {
 			sum += val
 		}
 	}
-	log.Printf("SUM: %f", sum)
 
 	return out
 }

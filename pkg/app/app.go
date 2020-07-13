@@ -16,5 +16,5 @@ type Response struct {
 }
 
 func (app *GinApp) Respond(httpCode, errCode int, data interface{}) {
-	app.Context.JSON(httpCode, Response{errCode, errors.GetMessage(errCode), data})
+	app.Context.IndentedJSON(httpCode, Response{errCode, errors.GetMessage(errCode), data})
 }

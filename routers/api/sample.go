@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"image"
 	"image/png"
-	"log"
 	"net/http"
 
 	"github.com/aarich/heroku-go/pkg/app"
@@ -22,12 +21,12 @@ func Sample(c *gin.Context) {
 
 	a := app.GinApp{c}
 
-	log.Println("SAMPLING")
 	s := &bytes.Buffer{}
 	png.Encode(s, result)
 	str := base64.StdEncoding.EncodeToString(s.Bytes())
 
 	a.Respond(http.StatusOK, errors.SUCCESS, map[string]string{
 		"result": str,
+		"url":    "data:image/png;base64," + str,
 	})
 }
