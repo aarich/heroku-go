@@ -9,12 +9,25 @@ type GinApp struct {
 	Context *gin.Context
 }
 
-type Response struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
-func (app *GinApp) Respond(httpCode, errCode int, data interface{}) {
-	app.Context.IndentedJSON(httpCode, Response{errCode, errors.GetMessage(errCode), data})
+type Response struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+func (app *GinApp) RespondSuccess(httpCode int, data interface{}) {
+	app.Context.IndentedJSON(httpCode, data)
+}
+
+func (app *GinApp) RespondError(httpCode, errCode int, extendedMessage string) {
+	message := errors.GetMessage(errCode)
+	if message != "" {
+		message += " " + extendedMessage
+	}
+
+	app.Context.IndentedJSON(httpCode, ErrorResponse{errCode, message})
 }

@@ -24,12 +24,12 @@ func Generate(c *gin.Context) {
 
 	if err != nil {
 		log.Println(err)
-		a.Respond(http.StatusInternalServerError, errors.UNKNOWN, nil)
+		a.RespondError(http.StatusInternalServerError, errors.UNKNOWN, "")
 		return
 	}
 
 	if image == nil {
-		a.Respond(http.StatusBadRequest, errors.INVALID_PARAMS, nil)
+		a.RespondError(http.StatusBadRequest, errors.INVALID_PARAMS, "Missing image.")
 		return
 	}
 	imageName := getImageName(image.Filename)
@@ -38,25 +38,25 @@ func Generate(c *gin.Context) {
 	src := fullPath + imageName
 
 	if !checkImageExt(imageName) || !checkImageSize(file) {
-		a.Respond(http.StatusBadRequest, errors.ERROR_UPLOAD_CHECK_IMAGE_FORMAT, nil)
+		a.RespondError(http.StatusBadRequest, errors.ERROR_UPLOAD_CHECK_IMAGE_FORMAT, "")
 		return
 	}
 
 	err = checkImage(fullPath)
 	if err != nil {
 		log.Println(err)
-		a.Respond(http.StatusInternalServerError, errors.ERROR_UPLOAD_CHECK_IMAGE_FAIL, nil)
+		a.RespondError(http.StatusInternalServerError, errors.ERROR_UPLOAD_CHECK_IMAGE_FAIL, "")
 		return
 	}
 
 	err = a.Context.SaveUploadedFile(image, src)
 	if err != nil {
 		log.Println(err)
-		a.Respond(http.StatusInternalServerError, errors.ERROR_UPLOAD_SAVE_IMAGE_FAIL, nil)
+		a.RespondError(http.StatusInternalServerError, errors.ERROR_UPLOAD_SAVE_IMAGE_FAIL, "")
 		return
 	}
 
-	a.Respond(http.StatusOK, errors.SUCCESS, map[string]string{
+	a.RespondSuccess(http.StatusOK, map[string]string{
 		"image_url":      getImageFullUrl(imageName),
 		"image_save_url": savePath + imageName,
 	})

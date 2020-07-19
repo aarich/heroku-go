@@ -6,20 +6,30 @@ import (
 )
 
 const (
-	Square = 1
+	Square = "square"
+	Steps  = "steps"
 )
 
-func MakeDistanceMap(bounds image.Rectangle, option int) [][]float32 {
+type distanceFunction func(x, y, w, h int) float32
+
+func MakeDistanceMap(bounds image.Rectangle, option string) [][]float32 {
+	var fn distanceFunction
+
 	switch option {
 	case Square:
-		return makeSquare(bounds)
+		fn = squareFn
+		break
+	case Steps:
+		fn = stepsFn
+		break
+	default:
+		log.Fatalf("Got unknown option %s", option)
 	}
-	log.Fatalf("Got unknown option %d", option)
-	return nil
+
+	return makeInner(bounds, fn)
 }
 
-// Returns a square in the inner third of the image
-func makeSquare(bounds image.Rectangle) [][]float32 {
+func makeInner(bounds image.Rectangle, d distanceFunction) [][]float32 {
 	var out [][]float32
 
 	w := bounds.Dx()
@@ -28,24 +38,28 @@ func makeSquare(bounds image.Rectangle) [][]float32 {
 	for x := 0; x < w; x++ {
 		col := make([]float32, w)
 		for y := 0; y < h; y++ {
-			if inbounds(x, w) && inbounds(y, h) {
-				col[y] = 0.9
-			} else {
-				col[y] = 0
-			}
+			col[y] = d(x, y, w, h)
 		}
 		out = append(out, col)
 	}
+	return out
+}
 
-	var sum float32
-	sum = 0.0
-	for _, row := range out {
-		for _, val := range row {
-			sum += val
-		}
+func stepsFn(x, y, w, h int) float32 {
+	if !inbounds(y, h) {
+		// Keep the top and bottom third as background
+		return 0
 	}
 
-	return out
+	return float32(x*5/w) / 5
+}
+
+func squareFn(x, y, w, h int) float32 {
+	if inbounds(x, w) && inbounds(y, h) {
+		return 0.9
+	} else {
+		return 0
+	}
 }
 
 func inbounds(index, bound int) bool {

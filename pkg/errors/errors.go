@@ -1,7 +1,6 @@
 package errors
 
 const (
-	SUCCESS                         = 2000
 	INVALID_PARAMS                  = 4000
 	UNKNOWN                         = 5000
 	ERROR_UPLOAD_CHECK_IMAGE_FORMAT = 5100
@@ -10,12 +9,11 @@ const (
 )
 
 var messages = map[int]string{
-	INVALID_PARAMS:                  "invalid parameters",
-	UNKNOWN:                         "unknown",
-	ERROR_UPLOAD_CHECK_IMAGE_FORMAT: "bad image format",
-	ERROR_UPLOAD_CHECK_IMAGE_FAIL:   "image check failed",
-	ERROR_UPLOAD_SAVE_IMAGE_FAIL:    "Failed saving image",
-	SUCCESS:                         "",
+	INVALID_PARAMS:                  "Invalid parameters.",
+	UNKNOWN:                         "Unknown error.",
+	ERROR_UPLOAD_CHECK_IMAGE_FORMAT: "Bad image format.",
+	ERROR_UPLOAD_CHECK_IMAGE_FAIL:   "Image check failed.",
+	ERROR_UPLOAD_SAVE_IMAGE_FAIL:    "Failed saving image.",
 }
 
 func GetMessage(errorCode int) string {

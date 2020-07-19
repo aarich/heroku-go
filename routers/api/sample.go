@@ -16,11 +16,18 @@ import (
 )
 
 func Sample(c *gin.Context) {
-	size := image.Rect(0, 0, 300, 300)
-	z := images.MakeDistanceMap(size, images.Square)
-	result := stereogram.Generate(z)
-
 	a := app.GinApp{Context: c}
+
+	queryParams := c.Request.URL.Query()
+	chosenType := queryParams.Get("type")
+	if chosenType == "" {
+		a.RespondError(http.StatusBadRequest, errors.INVALID_PARAMS, "Missing 'type' (options: 'square', 'steps').")
+		return
+	}
+
+	size := image.Rect(0, 0, 300, 300)
+	z := images.MakeDistanceMap(size, chosenType)
+	result := stereogram.Generate(z)
 
 	s := &bytes.Buffer{}
 	err := png.Encode(s, result)
@@ -29,8 +36,8 @@ func Sample(c *gin.Context) {
 	}
 	str := base64.StdEncoding.EncodeToString(s.Bytes())
 
-	a.Respond(http.StatusOK, errors.SUCCESS, map[string]string{
-		"result": str,
-		"url":    "data:image/png;base64," + str,
+	a.RespondSuccess(http.StatusOK, map[string]string{
+		"url":  "data:image/png;base64," + str,
+		"type": chosenType,
 	})
 }
