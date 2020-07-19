@@ -18,10 +18,8 @@ func MakeDistanceMap(bounds image.Rectangle, option string) [][]float32 {
 	switch option {
 	case Square:
 		fn = squareFn
-		break
 	case Steps:
 		fn = stepsFn
-		break
 	default:
 		log.Fatalf("Got unknown option %s", option)
 	}
