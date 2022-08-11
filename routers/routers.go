@@ -15,7 +15,7 @@ func InitRouter() *gin.Engine {
 
 	router.GET("/", pages.Index)
 
-	router.POST("/api/generate", api.Generate)
+	router.GET("/api/generate", api.Generate)
 	router.GET("/api/sample", api.Sample)
 
 	return router

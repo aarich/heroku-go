@@ -1,7 +1,12 @@
 package api
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
+	"image"
+	"image/png"
+	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -13,14 +18,16 @@ import (
 	"github.com/aarich/heroku-go/pkg/errors"
 	"github.com/aarich/heroku-go/pkg/file"
 	"github.com/aarich/heroku-go/pkg/settings"
+	"github.com/aarich/heroku-go/pkg/stereogram"
 	"github.com/aarich/heroku-go/pkg/util"
 	"github.com/gin-gonic/gin"
+	"github.com/harrydb/go/img/grayscale"
 )
 
 func Generate(c *gin.Context) {
 	a := app.GinApp{Context: c}
 
-	file, image, err := c.Request.FormFile("image")
+	file, info, err := c.Request.FormFile("image")
 
 	if err != nil {
 		log.Println(err)
@@ -28,38 +35,90 @@ func Generate(c *gin.Context) {
 		return
 	}
 
-	if image == nil {
+	if info == nil {
 		a.RespondError(http.StatusBadRequest, errors.INVALID_PARAMS, "Missing image.")
 		return
 	}
-	imageName := getImageName(image.Filename)
-	fullPath := getImageFullPath()
-	savePath := getImagePath()
-	src := fullPath + imageName
 
-	if !checkImageExt(imageName) || !checkImageSize(file) {
-		a.RespondError(http.StatusBadRequest, errors.ERROR_UPLOAD_CHECK_IMAGE_FORMAT, "")
+	if !okContentType(info.Header.Get("Content-Type")) {
+		a.RespondError(http.StatusBadRequest, errors.INVALID_PARAMS, "Image is wrong content type")
 		return
 	}
 
-	err = checkImage(fullPath)
+	bs, err := ioutil.ReadAll(file)
+
 	if err != nil {
-		log.Println(err)
-		a.RespondError(http.StatusInternalServerError, errors.ERROR_UPLOAD_CHECK_IMAGE_FAIL, "")
+		a.RespondError(http.StatusBadRequest, errors.UNKNOWN, "error reading file")
 		return
 	}
 
-	err = a.Context.SaveUploadedFile(image, src)
+	image, _, err := image.Decode(bytes.NewReader(bs))
+
 	if err != nil {
-		log.Println(err)
-		a.RespondError(http.StatusInternalServerError, errors.ERROR_UPLOAD_SAVE_IMAGE_FAIL, "")
+		a.RespondError(http.StatusBadRequest, errors.UNKNOWN, "error decoding file")
 		return
 	}
+
+	z := imageTo2dArray(&image)
+	result := stereogram.Generate(z)
+
+	s := &bytes.Buffer{}
+	err = png.Encode(s, result)
+	if err != nil {
+		log.Fatalln(err)
+		return
+	}
+	str := base64.StdEncoding.EncodeToString(s.Bytes())
 
 	a.RespondSuccess(http.StatusOK, map[string]string{
-		"image_url":      getImageFullUrl(imageName),
-		"image_save_url": savePath + imageName,
+		"url": "data:image/png;base64," + str,
 	})
+	//
+	// imageName := getImageName(image.Filename)
+	// fullPath := getImageFullPath()
+	// savePath := getImagePath()
+	// src := fullPath + imageName
+	//
+	// if !checkImageExt(imageName) || !checkImageSize(file) {
+	// 	a.RespondError(http.StatusBadRequest, errors.ERROR_UPLOAD_CHECK_IMAGE_FORMAT, "")
+	// 	return
+	// }
+	//
+	// err = checkImage(fullPath)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	a.RespondError(http.StatusInternalServerError, errors.ERROR_UPLOAD_CHECK_IMAGE_FAIL, "")
+	// 	return
+	// }
+	//
+	// err = a.Context.SaveUploadedFile(image, src)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	a.RespondError(http.StatusInternalServerError, errors.ERROR_UPLOAD_SAVE_IMAGE_FAIL, "")
+	// 	return
+	// }
+	//
+	// a.RespondSuccess(http.StatusOK, map[string]string{
+	// 	"image_url":      getImageFullUrl(imageName),
+	// 	"image_save_url": savePath + imageName,
+	// })
+}
+
+func imageTo2dArray(im *image.Image) [][]float32 {
+	gray := grayscale.Convert(*im, grayscale.ToGrayLuma)
+	var ret [][]float32
+
+	// For each pixel scale down the luminosity from 0-255 to 0-1
+	for y := 0; y < gray.Bounds().Dy(); y++ {
+		var row []float32
+		for x := 0; x < gray.Bounds().Dx(); x++ {
+			val := gray.GrayAt(x, y).Y
+			row = append(row, float32(val)/255)
+		}
+		ret = append(ret, row)
+	}
+
+	return ret
 }
 
 func getImageName(name string) string {
@@ -68,6 +127,10 @@ func getImageName(name string) string {
 	fileName = util.EncodeMD5(fileName)
 
 	return fileName + ext
+}
+
+func okContentType(contentType string) bool {
+	return contentType == "image/png" || contentType == "image/jpeg" || contentType == "image/gif"
 }
 
 func getImagePath() string {

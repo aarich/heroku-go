@@ -13,6 +13,7 @@ const (
 	EYE_SEPARATION = 200 // pixels
 )
 
+// z - array of rows (e.g. z[0] is the top row)
 func Generate(z [][]float32) *image.RGBA {
 	height := len(z)
 	width := len(z[0])
